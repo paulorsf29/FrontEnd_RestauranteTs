@@ -1,38 +1,62 @@
 import { Link, useNavigate } from 'react-router-dom';
 import Button from '../../components/UI/Button';
 import "../Home/styles.css";
-import { useState } from 'react';
+import { useState, useContext } from 'react';
+import { AuthContext } from '../../contexts/AuthContext';
 
-type userRole = 'gerente' | 'funcionario' | 'cliente' | 'delivery';
+type userRole = 'ADMIN' | 'KITCHEN' | 'CUSTOMER';
+
 
 export default function Registro() {
-  const [role, setRole] = useState<userRole>('cliente');
+  const { registro, isLoading } = useContext(AuthContext);
+  const [role, setRole] = useState<'ADMIN' | 'KITCHEN' | 'CUSTOMER'>('CUSTOMER');
   const [endereco, setEndereco] = useState('');
-  const [email,setEmail] = useState('');
-  const [senha,setSenha] = useState('');
+  const [email, setEmail] = useState('');
+  const [senha, setSenha] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
-  const [Telefone, setTelefone] = useState('');
-  const [ nomeCompleto, setNomeCompleto] = useState('');
+  const [telefone, setTelefone] = useState('');
+  const [nomeCompleto, setNomeCompleto] = useState('');
+  const [erro, setErro] = useState('');
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErro('');
+    
     if (senha !== confirmarSenha) {
-      alert('As senhas não coincidem');
+      return setErro('As senhas não coincidem');
     }
-    const dadosDoUsuario = { email, senha, confirmarSenha, Telefone, nomeCompleto, role, ...(role === 'cliente' && {endereco}) };
 
-    console.log(dadosDoUsuario);
-    navigate('/menu');
-    
-    
+    if (!nomeCompleto || !email || !telefone || !senha) {
+      return setErro('Preencha todos os campos obrigatórios');
+    }
+
+    try {
+      await registro({
+        nome: nomeCompleto,
+        email,
+        senha,
+        telefone,
+        role,
+        ...(role === 'CUSTOMER' && { endereco })
+      });
+      navigate('/menu');
+    } catch (err: any) {
+      setErro(err.message || 'Erro ao registrar');
+    }
   };
+
+
 
   return (
     <div className="auth-layout">
       <div className="auth-card">
         <h2 className="auth-title">Criar nova conta</h2>
-        
+        {erro && ( 
+          <div className="auth-error-message">
+            {erro}
+          </div>
+        )}
         <form className="auth-form" onSubmit={handleSubmit}>
           <div>
             <label className="block mb-2 text-amber-800">Nome completo</label>
@@ -42,8 +66,9 @@ export default function Registro() {
               placeholder="Seu nome"
               required
               value={nomeCompleto}
-              onChange={(e)=> setNomeCompleto(e.target.value)}
+              onChange={(e) => setNomeCompleto(e.target.value)}
               maxLength={200}
+              disabled={isLoading}
             />
           </div>
 
@@ -55,59 +80,54 @@ export default function Registro() {
               placeholder="seu@email.com"
               required
               value={email}
-              onChange={(e)=> setEmail(e.target.value)}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={isLoading}
             />
           </div>
 
           <div>
             <label className='block mb-2 text-amber-800'>Telefone</label>
             <input 
-            type='tel' 
-            className='auth-input' 
-            placeholder='(00) 00000-0000'
-            required
-            value={Telefone}
-            onChange={(e) => setTelefone(e.target.value)}
-            minLength={11}
-            maxLength={11}
+              type='tel' 
+              className='auth-input' 
+              placeholder='(00) 00000-0000'
+              required
+              value={telefone}
+              onChange={(e) => setTelefone(e.target.value)}
+              minLength={11}
+              maxLength={11}
+              disabled={isLoading}
             />
           </div>
 
           <div>
-            <label className="block mb-2 text-amber-800">Tipo de usuario</label>
+            <label className="block mb-2 text-amber-800">Tipo de usuário</label>
             <div className='grid grid-cols-2 gap-2'>
               <button
                 type='button'
-                className={`p-2 rounded-md border ${role === 'cliente' ? 'bg-amber-600 text-white' : 'bg-white '
-              }`}
-                onClick={() => setRole('cliente')}
+                className={`p-2 rounded-md border ${role === 'CUSTOMER' ? 'bg-amber-600 text-white' : 'bg-white'}`}
+                onClick={() => setRole('CUSTOMER')}
+                disabled={isLoading}
               >
                 Cliente
               </button>
               <button
                 type='button'
-                className={`p-2 rounded-md border ${role === 'gerente' ? 'bg-amber-600 text-white' : 'bg-white '
-              }`}
-                onClick={() => setRole('gerente')}
+                className={`p-2 rounded-md border ${role === 'ADMIN' ? 'bg-amber-600 text-white' : 'bg-white'}`}
+                onClick={() => setRole('ADMIN')}
+                disabled={isLoading}
               >
-                gerente
+                Gerente
               </button>
               <button
                 type='button'
-                className={`p-2 rounded-md border ${role === 'funcionario' ? 'bg-amber-600 text-white' : 'bg-white '
-              }`}
-                onClick={() => setRole('funcionario')}
+                className={`p-2 rounded-md border ${role === 'KITCHEN' ? 'bg-amber-600 text-white' : 'bg-white'}`}
+                onClick={() => setRole('KITCHEN')}
+                disabled={isLoading}
               >
-                funcionario
+                Funcionário
               </button>
-              <button
-                type='button'
-                className={`p-2 rounded-md border ${role === 'delivery' ? 'bg-amber-600 text-white' : 'bg-white '
-              }`}
-                onClick={() => setRole('delivery')}
-              >
-                delivery
-              </button>
+              
             </div>
           </div>
 
@@ -117,10 +137,11 @@ export default function Registro() {
               type="password"
               className="auth-input"
               placeholder="Sua senha"
-              required = {role === 'cliente'? true : false}
+              required
               value={senha}
-              onChange={(e)=> setSenha(e.target.value)}
+              onChange={(e) => setSenha(e.target.value)}
               minLength={6}
+              disabled={isLoading}
             />
           </div>
 
@@ -132,8 +153,9 @@ export default function Registro() {
               placeholder="Confirme sua senha"
               required
               value={confirmarSenha}
-              onChange={(e)=> setConfirmarSenha(e.target.value)}
+              onChange={(e) => setConfirmarSenha(e.target.value)}
               minLength={6}
+              disabled={isLoading}
             />
           </div>
 
@@ -141,8 +163,9 @@ export default function Registro() {
             type="submit" 
             variant="primary"
             className="auth-button"
+            disabled={isLoading}
           >
-            Cadastrar
+            {isLoading ? 'Cadastrando...' : 'Cadastrar'}
           </Button>
         </form>
         

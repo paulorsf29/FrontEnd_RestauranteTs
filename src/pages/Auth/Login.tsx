@@ -1,21 +1,43 @@
 import { Link, useNavigate } from 'react-router-dom';
 import Button from '../../components/UI/Button';
 import "../Home/styles.css";
-import { useState } from 'react';
+import { useState, useContext } from 'react';
+import { AuthContext } from '../../contexts/AuthContext';
 
 export default function Login() {
-  const navigate = useNavigate()
-  const [email,setEmail] = useState('');
-  const [senha,setSenha] = useState('');
-  const handleSubmit = (e: React.FormEvent) => {
+  const navigate = useNavigate();
+  const { login, isLoading } = useContext(AuthContext);
+  const [erro, setErro] = useState('');
+  const [email, setEmail] = useState('');
+  const [senha, setSenha] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    navigate('/menu');
+    setErro('');
+
+    if (!email || !senha) {
+      return setErro('Preencha todos os campos');
+    }
+
+    const { success, message } = await login(email, senha);
+    
+    if (success) {
+      navigate('/menu');
+    } else {
+      setErro(message || "Email ou senha incorretos");
+    }
   };
 
   return (
     <div className="auth-layout">
       <div className="auth-card">
         <h2 className="auth-title">Acesse sua conta</h2>
+
+        {erro && (
+          <div className='auth-error-menssage'>
+            {erro}
+          </div>
+        )}
         
         <form className="auth-form" onSubmit={handleSubmit}>
           <div>
@@ -27,6 +49,7 @@ export default function Login() {
               required
               value={email}
               onChange={(e)=> setEmail(e.target.value)}
+              disabled={isLoading}
             />
           </div>
 
@@ -39,6 +62,7 @@ export default function Login() {
               required
               value={senha}
               onChange={(e)=> setSenha(e.target.value)}
+              disabled={isLoading}
             />
           </div>
           
@@ -46,8 +70,9 @@ export default function Login() {
             type="submit" 
             variant="primary"
             className="auth-button"
+            disabled={isLoading}
           >
-            Entrar
+            {isLoading ? 'Entrando...' : 'Entrar'}
           </Button>
         </form>
         
