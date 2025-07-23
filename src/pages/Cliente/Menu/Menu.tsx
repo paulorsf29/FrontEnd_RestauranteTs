@@ -1,71 +1,31 @@
-import React, { useState } from "react";
+import React from "react";
+import { useMenu } from "../../../contexts/MenuItemContext";
 
-type MenuItem = {
-  id: number;
-  titulo: string;
-  descricao: string;
-  preco: number;
-  categoria: string;
-};
+export default function MenuPage() {
+  const { 
+    filteredItems, 
+    activeCategory, 
+    categories, 
+    setActiveCategory,
+    isLoading,
+    error
+  } = useMenu();
 
-export default function Menu() {
-  const [activeCategory, setActiveCategory] = useState("pizzas");
-  
-  // Dados de exemplo - substitua pelos seus produtos reais
-  const menuItems: MenuItem[] = [
-    {
-      id: 1,
-      titulo: "Pizza Margherita",
-      descricao: "Molho de tomate, mussarela, manjericão",
-      preco: 35.90,
-      categoria: "pizzas"
-    },
-    {
-      id: 2,
-      titulo: "Pizza Calabresa",
-      descricao: "Molho de tomate, mussarela, calabresa, cebola",
-      preco: 42.90,
-      categoria: "pizzas"
-    },
-    {
-      id: 3,
-      titulo: "Hambúrguer Clássico",
-      descricao: "Pão, hambúrguer 180g, queijo, alface, tomate",
-      preco: 28.90,
-      categoria: "hamburgueres"
-    },
-    {
-      id: 4,
-      titulo: "Picanha",
-      descricao: "300g de picanha com farofa e vinagrete",
-      preco: 89.90,
-      categoria: "churrasco"
-    },
-    {
-      id: 5,
-      titulo: "Batata Frita",
-      descricao: "Porção de batata frita crocante",
-      preco: 18.90,
-      categoria: "acompanhamentos"
-    },
-    {
-      id: 6,
-      titulo: "Sorvete",
-      descricao: "Casquinha com 2 bolas de sorvete",
-      preco: 12.90,
-      categoria: "gelados"
-    }
-  ];
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-amber-600 text-2xl">Carregando cardápio...</div>
+      </div>
+    );
+  }
 
-  const categories = [
-    { id: "pizzas", name: "Pizzas" },
-    { id: "hamburgueres", name: "Hambúrgueres" },
-    { id: "churrasco", name: "Churrasco" },
-    { id: "acompanhamentos", name: "Acompanhamentos" },
-    { id: "gelados", name: "Gelados" }
-  ];
-
-  const filteredItems = menuItems.filter(item => item.categoria === activeCategory);
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-red-500 text-xl">{error}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -91,7 +51,6 @@ export default function Menu() {
           </div>
           
           <button className="p-2 rounded-full bg-amber-100 text-amber-800 relative">
-            
             <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
               0
             </span>
@@ -110,12 +69,14 @@ export default function Menu() {
             <div key={item.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
               <div className="p-6">
                 <div className="flex justify-between items-start">
-                  <h3 className="text-xl font-semibold text-gray-800">{item.titulo}</h3>
-                  <span className="text-lg font-bold text-amber-600">R$ {item.preco.toFixed(2)}</span>
+                  <h3 className="text-xl font-semibold text-gray-800">{item.nome}</h3>
+                  <span className="text-lg font-bold text-amber-600">
+                    R$ {(item.preco / 100).toFixed(2)}
+                  </span>
                 </div>
                 <p className="mt-2 text-gray-600">{item.descricao}</p>
                 <button className="mt-4 px-4 py-2 bg-amber-600 text-white rounded-md hover:bg-amber-700 transition-colors">
-                  Adicionar ao carrinho
+                  {item.disponibilidade ? "Adicionar ao carrinho" : "Indisponível"}
                 </button>
               </div>
             </div>

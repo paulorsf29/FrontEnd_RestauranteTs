@@ -1,56 +1,58 @@
-// src/contexts/MenuContext.tsx
-import { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState } from "react";
 import { getMenuItems } from "../services/menuService";
 
-/**
- * Tipo que representa um item do cardápio.
- */
 type MenuItem = {
   id: string;
   nome: string;
   descricao: string;
-  preco: number; // Em centavos (ex: R$ 20,50 = 2050)
+  preco: number;
   categoria: string;
   disponibilidade: boolean;
-  fotos?: string[]; // URLs das imagens
+  fotos?: string[];
 };
 
-/**
- * Tipo do contexto do cardápio.
- */
 type MenuContextType = {
   menuItems: MenuItem[];
+  filteredItems: MenuItem[];
+  activeCategory: string;
+  categories: { id: string; name: string }[];
   loadMenuItems: () => Promise<void>;
+  clearMenuItems: () => void;
+  setActiveCategory: (category: string) => void;
   isLoading: boolean;
   error: string | null;
 };
 
-// Cria o contexto com valores padrão
 const MenuContext = createContext<MenuContextType>({
   menuItems: [],
+  filteredItems: [],
+  activeCategory: "",
+  categories: [],
   loadMenuItems: async () => {},
+  clearMenuItems: () => {},
+  setActiveCategory: () => {},
   isLoading: false,
-  error: null,
+  error: null
 });
 
-/**
- * Hook personalizado para acessar o contexto do cardápio.
- * @returns {MenuContextType} O contexto do cardápio.
- */
 export const useMenu = () => useContext(MenuContext);
 
-/**
- * Provedor do contexto do cardápio.
- * Gerencia o estado dos itens do cardápio e fornece funções para carregá-los.
- */
 export function MenuProvider({ children }: { children: React.ReactNode }) {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [activeCategory, setActiveCategory] = useState("pizzas");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  /**
-   * Carrega os itens do cardápio da API.
-   */
+  const categories = [
+    { id: "pizzas", name: "Pizzas" },
+    { id: "hamburgueres", name: "Hambúrgueres" },
+    { id: "churrasco", name: "Churrasco" },
+    { id: "acompanhamentos", name: "Acompanhamentos" },
+    { id: "gelados", name: "Gelados" }
+  ];
+
+  const filteredItems = menuItems.filter(item => item.categoria === activeCategory);
+
   const loadMenuItems = async () => {
     setIsLoading(true);
     setError(null);
@@ -58,15 +60,29 @@ export function MenuProvider({ children }: { children: React.ReactNode }) {
       const data = await getMenuItems();
       setMenuItems(data);
     } catch (err) {
-      setError("Falha ao carregar o cardápio. Tente novamente.");
+      setError("Falha ao carregar o cardápio");
       console.error(err);
     } finally {
       setIsLoading(false);
     }
   };
 
+  const clearMenuItems = () => {
+    setMenuItems([]);
+  };
+
   return (
-    <MenuContext.Provider value={{ menuItems, loadMenuItems, isLoading, error }}>
+    <MenuContext.Provider value={{ 
+      menuItems,
+      filteredItems,
+      activeCategory,
+      categories,
+      loadMenuItems,
+      clearMenuItems,
+      setActiveCategory,
+      isLoading,
+      error
+    }}>
       {children}
     </MenuContext.Provider>
   );

@@ -4,12 +4,11 @@ import "../Home/styles.css";
 import { useState, useContext } from 'react';
 import { AuthContext } from '../../contexts/AuthContext';
 
-type userRole = 'ADMIN' | 'KITCHEN' | 'CUSTOMER';
-
+type UserRole = 'ADMIN' | 'KITCHEN' | 'CUSTOMER';
 
 export default function Registro() {
-  const { registro, isLoading } = useContext(AuthContext);
-  const [role, setRole] = useState<'ADMIN' | 'KITCHEN' | 'CUSTOMER'>('CUSTOMER');
+  const { register, isLoading } = useContext(AuthContext);
+  const [role, setRole] = useState<UserRole>('CUSTOMER');
   const [endereco, setEndereco] = useState('');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
@@ -31,22 +30,22 @@ export default function Registro() {
       return setErro('Preencha todos os campos obrigatórios');
     }
 
-    try {
-      await registro({
-        nome: nomeCompleto,
-        email,
-        senha,
-        telefone,
-        role,
-        ...(role === 'CUSTOMER' && { endereco })
-      });
-      navigate('/menu');
-    } catch (err: any) {
-      setErro(err.message || 'Erro ao registrar');
+    const { success, message } = await register({
+      nome: nomeCompleto,
+      email,
+      senha,
+      telefone,
+      role,
+      ...(role === 'CUSTOMER' && { endereco })
+    });
+    
+    if (!success) {
+      setErro(message || 'Erro ao registrar');
     }
+    if (success) {
+    navigate('/menu');
+  }
   };
-
-
 
   return (
     <div className="auth-layout">

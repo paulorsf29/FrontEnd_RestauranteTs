@@ -19,12 +19,14 @@ export default function Login() {
       return setErro('Preencha todos os campos');
     }
 
-    const { success, message } = await login(email, senha);
-    
-    if (success) {
-      navigate('/menu');
-    } else {
-      setErro(message || "Email ou senha incorretos");
+    try {
+      const { success, message } = await login(email, senha);
+      
+      if (!success) {
+        setErro(message || "Email ou senha incorretos");
+      }
+    } catch (error) {
+      setErro('Erro ao conectar com o servidor');
     }
   };
 
@@ -34,7 +36,7 @@ export default function Login() {
         <h2 className="auth-title">Acesse sua conta</h2>
 
         {erro && (
-          <div className='auth-error-menssage'>
+          <div className='auth-error-message'>
             {erro}
           </div>
         )}
@@ -48,7 +50,7 @@ export default function Login() {
               placeholder="seu@email.com"
               required
               value={email}
-              onChange={(e)=> setEmail(e.target.value)}
+              onChange={(e) => setEmail(e.target.value)}
               disabled={isLoading}
             />
           </div>
@@ -61,7 +63,7 @@ export default function Login() {
               placeholder="Sua senha"
               required
               value={senha}
-              onChange={(e)=> setSenha(e.target.value)}
+              onChange={(e) => setSenha(e.target.value)}
               disabled={isLoading}
             />
           </div>

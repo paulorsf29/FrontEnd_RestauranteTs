@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useMenu } from "../../contexts/MenuItemContext";
 import { createMenuItem, updateMenuItem, deleteMenuItem, type MenuItem } from "../../services/menuService";
 
-// Componente para upload de fotos (simplificado)
 const ImageUploader = ({ onUpload }: { onUpload: (file: File) => void }) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -10,7 +9,19 @@ const ImageUploader = ({ onUpload }: { onUpload: (file: File) => void }) => {
     }
   };
 
-  return <input type="file" accept="image/*" onChange={handleChange} />;
+  return (
+    <input 
+      type="file" 
+      accept="image/*" 
+      onChange={handleChange}
+      className="block w-full text-sm text-gray-500
+        file:mr-4 file:py-2 file:px-4
+        file:rounded-md file:border-0
+        file:text-sm file:font-semibold
+        file:bg-amber-50 file:text-amber-700
+        hover:file:bg-amber-100"
+    />
+  );
 };
 
 export default function CardapioGerente() {
@@ -24,8 +35,9 @@ export default function CardapioGerente() {
     disponibilidade: true,
   });
   const [photos, setPhotos] = useState<File[]>([]);
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  // Carrega os itens ao montar o componente
   useEffect(() => {
     loadMenuItems();
   }, []);
@@ -54,26 +66,30 @@ export default function CardapioGerente() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setApiError(null);
+    setSuccessMessage(null);
     
-    const itemData = new FormData();
-    itemData.append('nome', formData.nome);
-    itemData.append('descricao', formData.descricao);
-    itemData.append('preco', (parseFloat(formData.preco) * 100).toString()); // Converte para centavos
-    itemData.append('categoria', formData.categoria);
-    itemData.append('disponibilidade', formData.disponibilidade.toString());
-    
-    photos.forEach(photo => {
-      itemData.append('fotos', photo);
-    });
-
     try {
+      const itemData = new FormData();
+      itemData.append('nome', formData.nome);
+      itemData.append('descricao', formData.descricao);
+      itemData.append('preco', (parseFloat(formData.preco) * 100).toString());
+      itemData.append('categoria', formData.categoria);
+      itemData.append('disponibilidade', formData.disponibilidade.toString());
+      
+      photos.forEach(photo => {
+        itemData.append('files', photo);
+      });
+
       if (editingItem) {
         await updateMenuItem(editingItem.id, itemData);
+        setSuccessMessage('Item atualizado com sucesso!');
       } else {
         await createMenuItem(itemData);
+        setSuccessMessage('Item criado com sucesso!');
       }
       
-      // Limpa o formulário e recarrega os itens
+      // Reset form
       setFormData({
         nome: "",
         descricao: "",
@@ -84,9 +100,13 @@ export default function CardapioGerente() {
       setPhotos([]);
       setEditingItem(null);
       await loadMenuItems();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao salvar item:', error);
-      alert('Erro ao salvar item');
+      setApiError(
+        error.response?.data?.message || 
+        error.message || 
+        'Erro ao salvar item. Verifique os dados e tente novamente.'
+      );
     }
   };
 
@@ -95,11 +115,11 @@ export default function CardapioGerente() {
     setFormData({
       nome: item.nome,
       descricao: item.descricao,
-      preco: (item.preco / 100).toString(), // Converte para reais
+      preco: (item.preco / 100).toString(),
       categoria: item.categoria,
       disponibilidade: item.disponibilidade,
     });
-    // Nota: Fotos existentes precisariam de tratamento especial
+    setPhotos([]);
   };
 
   const handleDelete = async (id: string) => {
@@ -107,21 +127,31 @@ export default function CardapioGerente() {
       try {
         await deleteMenuItem(id);
         await loadMenuItems();
-      } catch (error) {
+        setSuccessMessage('Item excluído com sucesso!');
+      } catch (error: any) {
         console.error('Erro ao excluir item:', error);
-        alert('Erro ao excluir item');
+        setApiError(
+          error.response?.data?.message || 
+          error.message || 
+          'Erro ao excluir item'
+        );
       }
     }
   };
 
-  if (isLoading) return <div>Carregando...</div>;
-  if (error) return <div>{error}</div>;
+  if (isLoading) return <div className="p-6">Carregando...</div>;
+  if (error) return <div className="p-6 text-red-500">{error}</div>;
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <h1 className="text-3xl font-bold mb-6">Gerenciamento de Cardápio</h1>
       
-      {/* Formulário para adicionar/editar itens */}
+      {apiError && (
+        <div className="mb-4 p-4 bg-red-100 text-red-700 rounded">
+          {apiError}
+        </div>
+      )}
+
       <div className="bg-white p-6 rounded-lg shadow-md mb-8">
         <h2 className="text-xl font-semibold mb-4">
           {editingItem ? 'Editar Item' : 'Adicionar Novo Item'}

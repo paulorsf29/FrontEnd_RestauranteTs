@@ -1,71 +1,73 @@
 import axios from "axios";
 
-const API_URL = "http://192.168.1.4:8081/api/auth/";
+const API_URL = "http://localhost:8081/api/auth/";
 
 const api = axios.create({
-    baseURL: API_URL,
-    headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-    },
-    timeout: 5000 // 5 segundos de timeout
+  baseURL: API_URL,
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+  },
+  withCredentials: false,
+  timeout: 30000
 });
 
-// Interceptor para adicionar token
+// Request interceptor
 api.interceptors.request.use((config) => {
-    const token = localStorage.getItem('accessToken');
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
+  const token = localStorage.getItem('accessToken');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
 }, (error) => {
-    return Promise.reject(error);
+  return Promise.reject(error);
 });
 
-// Interceptor para tratamento de erros
+// Response interceptor
 api.interceptors.response.use(
-    (response) => {
-        return response;
-    },
-    (error) => {
-        if (error.response) {
-            // Tratamento específico para erros 401 (não autorizado)
-            if (error.response.status === 401) {
-                localStorage.removeItem('accessToken');
-                window.location.href = '/login';
-            }
-            
-            const errorMessage = error.response.data?.message || 
-                              error.response.data?.error ||
-                              error.response.statusText || 
-                              'Erro na requisição';
-            return Promise.reject(new Error(errorMessage));
-        } else if (error.request) {
-            // A requisição foi feita mas não houve resposta
-            return Promise.reject(new Error('Sem resposta do servidor. Verifique sua conexão.'));
-        } else {
-            // Algo aconteceu na configuração da requisição
-            return Promise.reject(new Error('Erro ao configurar a requisição.'));
-        }
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('accessToken');
+      window.location.href = '/login';
     }
+    return Promise.reject(error);
+  }
 );
 
-export const login = (email: string, senha: string) => {
-    return api.post('login', { email, senha });
+export const login = async (email: string, senha: string) => {
+  try {
+    const response = await api.post('login', { email, senha });
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      throw new Error(error.response.data?.message || 
+                    error.response.data?.error || 
+                    'Erro ao fazer login');
+    }
+    throw new Error('Erro de conexão com o servidor');
+  }
 };
 
-export const register = (userData: {
-    nome: string;
-    email: string;
-    senha: string;
-    telefone: string;
-    role: 'ADMIN' | 'KITCHEN' | 'CUSTOMER';
-    endereco?: string;
+export const register = async (userData: {
+  nome: string;
+  email: string;
+  senha: string;
+  telefone: string;
+  role: string;
+  endereco?: string;
 }) => {
-    return api.post('register', {
-        ...userData,
-        ativo: true
-    });
+  try {
+    const response = await api.post('register', userData);
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      throw new Error(error.response.data?.message || 
+                    error.response.data?.error || 
+                    'Erro ao registrar');
+    }
+    throw new Error('Erro de conexão com o servidor');
+  }
 };
 
 export default api;
