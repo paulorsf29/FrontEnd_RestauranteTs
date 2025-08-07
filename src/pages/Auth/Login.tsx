@@ -25,8 +25,10 @@ export default function Login() {
       if (!success) {
         setErro(message || "Email ou senha incorretos");
       }
+      // O redirecionamento agora é feito pelo AuthContext após login bem-sucedido
     } catch (error) {
       setErro('Erro ao conectar com o servidor');
+      console.error("Erro detalhado:", error);
     }
   };
 

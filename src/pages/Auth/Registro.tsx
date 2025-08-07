@@ -21,7 +21,7 @@ export default function Registro() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErro('');
-    
+
     if (senha !== confirmarSenha) {
       return setErro('As senhas não coincidem');
     }
@@ -38,20 +38,32 @@ export default function Registro() {
       role,
       ...(role === 'CUSTOMER' && { endereco })
     });
-    
+
     if (!success) {
       setErro(message || 'Erro ao registrar');
     }
     if (success) {
-    navigate('/menu');
-  }
+      switch (role) {
+        case 'ADMIN':
+          navigate('/cardapioGerente');
+          break;
+        case 'KITCHEN':
+          navigate('/cardapioCozinha');
+          break;
+        case 'CUSTOMER':
+          navigate('/menu');
+          break;
+        default:
+          break;
+      }
+    }
   };
 
   return (
     <div className="auth-layout">
       <div className="auth-card">
         <h2 className="auth-title">Criar nova conta</h2>
-        {erro && ( 
+        {erro && (
           <div className="auth-error-message">
             {erro}
           </div>
@@ -59,7 +71,7 @@ export default function Registro() {
         <form className="auth-form" onSubmit={handleSubmit}>
           <div>
             <label className="block mb-2 text-amber-800">Nome completo</label>
-            <input 
+            <input
               type="text"
               className="auth-input"
               placeholder="Seu nome"
@@ -73,7 +85,7 @@ export default function Registro() {
 
           <div>
             <label className="block mb-2 text-amber-800">Email</label>
-            <input 
+            <input
               type="email"
               className="auth-input"
               placeholder="seu@email.com"
@@ -86,9 +98,9 @@ export default function Registro() {
 
           <div>
             <label className='block mb-2 text-amber-800'>Telefone</label>
-            <input 
-              type='tel' 
-              className='auth-input' 
+            <input
+              type='tel'
+              className='auth-input'
               placeholder='(00) 00000-0000'
               required
               value={telefone}
@@ -126,13 +138,13 @@ export default function Registro() {
               >
                 Funcionário
               </button>
-              
+
             </div>
           </div>
 
           <div>
             <label className="block mb-2 text-amber-800">Senha</label>
-            <input 
+            <input
               type="password"
               className="auth-input"
               placeholder="Sua senha"
@@ -146,7 +158,7 @@ export default function Registro() {
 
           <div>
             <label className="block mb-2 text-amber-800">Confirme sua senha</label>
-            <input 
+            <input
               type="password"
               className="auth-input"
               placeholder="Confirme sua senha"
@@ -158,8 +170,8 @@ export default function Registro() {
             />
           </div>
 
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             variant="primary"
             className="auth-button"
             disabled={isLoading}
@@ -167,7 +179,7 @@ export default function Registro() {
             {isLoading ? 'Cadastrando...' : 'Cadastrar'}
           </Button>
         </form>
-        
+
         <Link to="/login" className="auth-link">
           Já tem uma conta? Entrar
         </Link>

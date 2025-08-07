@@ -1,5 +1,6 @@
 import React from "react";
 import { useMenu } from "../../../contexts/MenuItemContext";
+import { useNavigate } from "react-router-dom"; // Importe o useNavigate
 
 export default function MenuPage() {
   const { 
@@ -10,6 +11,8 @@ export default function MenuPage() {
     isLoading,
     error
   } = useMenu();
+  
+  const navigate = useNavigate(); 
 
   if (isLoading) {
     return (
@@ -50,15 +53,32 @@ export default function MenuPage() {
             ))}
           </div>
           
-          <button className="p-2 rounded-full bg-amber-100 text-amber-800 relative">
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-              0
-            </span>
-          </button>
+          <div className="flex items-center space-x-2">
+            {/* Botão de perfil */}
+            <button 
+              onClick={() => navigate('/perfil')}
+              className="p-2 rounded-full bg-gray-100 text-gray-800 hover:bg-gray-200 transition-colors"
+              aria-label="Perfil"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            </button>
+            
+            {/* Botão do carrinho */}
+            <button className="p-2 rounded-full bg-amber-100 text-amber-800 relative" onClick={() => navigate('/carrinhoDeCompras')}>
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                0
+              </span>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </button>
+          </div>
         </div>
       </nav>
 
-      {/* Conteúdo do menu */}
+      {/* Restante do código permanece igual */}
       <div className="container mx-auto px-4 py-8">
         <h2 className="text-3xl font-bold mb-6 text-amber-800 capitalize">
           {categories.find(c => c.id === activeCategory)?.name}
